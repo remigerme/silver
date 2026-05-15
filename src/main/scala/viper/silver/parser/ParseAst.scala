@@ -1503,6 +1503,14 @@ case class PNewExp(keyword: PKw.New, fields: PGrouped.Paren[Either[PSym.Star, PD
   def forceSubstitution(ts: PTypeSubstitution) = {}
 }
 
+/* attached fact to wand */
+case class PAttached(attached: PKwOp.Attached, fact: PExp, to: PKwOp.To, wand: PExp)(val pos: (Position, Position)) extends PHeapOpApp {
+  override val args = Seq(fact, wand)
+  override def signatures: List[PTypeSubstitution] = List(
+    Map(POpApp.pArgS(0) -> Bool, POpApp.pArgS(1) -> Wand, POpApp.pResS -> Bool)
+  )
+}
+
 sealed trait PScope extends PNode {
   val scopeId = PScope.uniqueId()
 }

@@ -197,7 +197,9 @@ object FastParserCompanion {
     // permission syntax
     PKwOp.Acc, PKw.Wildcard, PKw.Write, PKw.None, PKw.Epsilon, PKw.Perm,
     // modifiers
-    PKw.Unique
+    PKw.Unique,
+    // facts attached to wands
+    PKwOp.Attached, PKwOp.To
   )
 }
 
@@ -404,7 +406,7 @@ class FastParser {
   def atomReservedKw[$: P]: P[PExp] = {
     reservedKwMany(
       StringIn("true", "false", "null", "old", "result", "acc", "none", "wildcard", "write", "epsilon", "perm", "let", "forall", "exists", "forperm",
-        "unfolding", "applying", "asserting", "Set", "Seq", "Multiset", "Map", "range", "domain", "new"),
+        "unfolding", "applying", "asserting", "Set", "Seq", "Multiset", "Map", "range", "domain", "new", "attached"),
       str => pos => str match {
         case "true" => Pass.map(_ => PBoolLit(PReserved(PKw.True)(pos))(_))
         case "false" => Pass.map(_ => PBoolLit(PReserved(PKw.False)(pos))(_))
@@ -431,6 +433,7 @@ class FastParser {
         case "range" => mapRange.map(_(PReserved(PKwOp.Range)(pos)))
         case "domain" => mapDomain.map(_(PReserved(PKwOp.Domain)(pos)))
         case "new" => newExp.map(_(PReserved(PKw.New)(pos)))
+        case "attached" => attached.map(_(PReserved(PKwOp.Attached)(pos)))
       }
     ).pos
   }
@@ -755,6 +758,11 @@ class FastParser {
   def newExp[$: P]: P[PKw.New => Pos => PNewExp] = P(newExpFields.parens map { n => PNewExp(_, n) })
 
   def newExpFields[$: P]: P[Either[PSym.Star, PDelimited[PIdnRef[PFieldDecl], PSym.Comma]]] = P(P(PSym.Star).map(Left(_)) | P(idnref[$, PFieldDecl].delimited(PSym.Comma).map(Right(_))))
+
+  def attached[$: P]: P[PKwOp.Attached => Pos => PAttached] = P((exp ~ PKwOp.To ~ magicWandExp())).map {
+    case (fact, to, wand) => 
+      PAttached(_, fact, to, wand) 
+  }
 
   def funcApp[$: P]: P[PCall] = P(idnref[$, PCallable] ~~ " ".repX(1).map { _ => pos: Pos => pos }.pos.? ~~ argList(exp)).map {
     case (func, space, args) =>

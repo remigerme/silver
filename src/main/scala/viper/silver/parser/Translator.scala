@@ -514,6 +514,8 @@ case class Translator(program: PProgram) {
         Applying(exp(wand).asInstanceOf[MagicWand], exp(e))(pos, info)
       case PAsserting(_, a, _, e) =>
         Asserting(exp(a), exp(e))(pos, info)
+      case PAttached(_, fact, _, wand) =>
+        Attached(exp(fact), exp(wand).asInstanceOf[MagicWand])(pos, info)
       case pl@PLet(_, _, _, exp1, _, PLetNestedScope(body)) =>
         Let(liftLogicalDecl(pl.decl), exp(exp1.inner), exp(body))(pos, info)
       case _: PLetNestedScope =>

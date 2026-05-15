@@ -385,8 +385,11 @@ object Consistency {
 
         c.copy(insideWandStatus = InsideWandStatus.Yes)
 
-      case po@LabelledOld(_, LabelledOld.LhsOldLabel) if !c.insideWandStatus.isInside =>
-        s :+= ConsistencyError("Labelled old expressions with \"lhs\" label may only occur inside wands and their proof scripts.", po.pos)
+      case _: Attached =>
+        c.copy(insideAttachedFactStatus = true)
+
+      case po@LabelledOld(_, LabelledOld.LhsOldLabel) if !c.insideWandStatus.isInside && !c.insideAttachedFactStatus =>
+        s :+= ConsistencyError("Labelled old expressions with \"lhs\" label may only occur inside wands and their proof scripts or facts attached to a wand.", po.pos)
         c
 
       case FieldAccessPredicate(_, _) |
@@ -466,5 +469,6 @@ object Consistency {
   /** Context for context dependent consistency checking. */
   case class Context(program: Program,
                      insideWandStatus: InsideWandStatus = InsideWandStatus.No,
-                     insideAccessPredicateStatus: Boolean = false)
+                     insideAccessPredicateStatus: Boolean = false,
+                     insideAttachedFactStatus: Boolean = false)
 }

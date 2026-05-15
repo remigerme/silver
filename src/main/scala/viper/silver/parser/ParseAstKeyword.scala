@@ -540,6 +540,11 @@ object PKwOp {
   case object Range       extends PKwOp("range")                    with PKeywordAtom
   type Range = PReserved[Range.type]
 
+  case object Attached    extends PKwOp("attached")                 with PKeywordAtom
+  type Attached = PReserved[Attached.type]
+  case object To          extends PKwOp("to")                       with PKeywordAtom
+  type To = PReserved[To.type]
+
   case object Seq         extends PKwOp("Seq")                      with PKeywordAtom
   type Seq = PReserved[Seq.type]
   case object Set         extends PKwOp("Set")                      with PKeywordAtom
