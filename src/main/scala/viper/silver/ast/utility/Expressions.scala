@@ -26,6 +26,7 @@ object Expressions {
     case unf: Unfolding => isPure(unf.body)
     case app: Applying => isPure(app.body)
     case Asserting(a, e) => isPure(e)
+    case Attached(fact, _) => isPure(fact)
     case QuantifiedExp(_, e0) => isPure(e0)
     case Let(_, _, body) => isPure(body)
     case e: ExtensionExp => e.extensionIsPure
