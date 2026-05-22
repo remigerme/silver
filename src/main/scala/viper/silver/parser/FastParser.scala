@@ -199,7 +199,7 @@ object FastParserCompanion {
     // modifiers
     PKw.Unique,
     // facts attached to wands
-    PKwOp.Attached, PKwOp.To
+    PKwOp.Attached, PKwOp.To, PKwOp.Attaching
   )
 }
 
@@ -764,6 +764,8 @@ class FastParser {
       PAttached(_, fact, to, wand) 
   }
 
+  def attaching[$: P]: P[PAttaching] = P((P(PKwOp.Attaching) ~ exp) map (PAttaching.apply _).tupled).pos
+
   def funcApp[$: P]: P[PCall] = P(idnref[$, PCallable] ~~ " ".repX(1).map { _ => pos: Pos => pos }.pos.? ~~ argList(exp)).map {
     case (func, space, args) =>
       space.foreach { space =>
@@ -879,7 +881,8 @@ class FastParser {
     P((idndef ~~ semiSeparated(invariant)) map { case (i, inv) => k=> PLabel(k, i, inv) _ })
 
   def packageWand[$: P]: P[PKw.Package => Pos => PPackageWand] =
-    P((magicWandExp() ~~~ stmtBlock().lw.?) map { case (wand, proof) => PPackageWand(_, wand, proof) _ })
+    P((magicWandExp() ~~~ attaching.lw.rep ~~~ stmtBlock().lw.?) map {
+      case (wand, attachings, proof) => PPackageWand(_, wand, attachings, proof) _ })
 
   def applyWand[$: P]: P[PKw.Apply => Pos => PApplyWand] =
     P(magicWandExp() map { wand => PApplyWand(_, wand) _ })

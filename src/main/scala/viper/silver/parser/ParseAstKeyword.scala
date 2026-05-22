@@ -544,6 +544,8 @@ object PKwOp {
   type Attached = PReserved[Attached.type]
   case object To          extends PKwOp("to")                       with PKeywordAtom
   type To = PReserved[To.type]
+  case object Attaching   extends PKwOp("attaching")                with PKeywordAtom
+  type Attaching = PReserved[Attaching.type]
 
   case object Seq         extends PKwOp("Seq")                      with PKeywordAtom
   type Seq = PReserved[Seq.type]

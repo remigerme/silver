@@ -462,6 +462,17 @@ object errors {
   def PackageFailed(offendingNode: Package): PartialVerificationError =
     PartialVerificationError((reason: ErrorReason) => PackageFailed(offendingNode, reason))
 
+  case class AttachingFailed(offendingNode: Attaching, reason: ErrorReason, override val cached: Boolean = false) extends AbstractVerificationError {
+    val id = "attaching.failed"
+    val text = s"Attaching fact when packaging wand might fail."
+
+    def withNode(offendingNode: errors.ErrorNode = this.offendingNode) = AttachingFailed(offendingNode.asInstanceOf[Attaching], this.reason, this.cached)
+    def withReason(r: ErrorReason) = AttachingFailed(offendingNode, r, cached)
+  }
+
+  def AttachingFailed(offendingNode: Attaching): PartialVerificationError =
+    PartialVerificationError((reason: ErrorReason) => AttachingFailed(offendingNode, reason))
+
   case class ApplyFailed(offendingNode: Apply, reason: ErrorReason, override val cached: Boolean = false) extends AbstractVerificationError {
     val id = "apply.failed"
     val text = s"Applying wand might fail."

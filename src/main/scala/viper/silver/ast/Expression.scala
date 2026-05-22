@@ -518,6 +518,14 @@ case class Attached(fact: Exp, wand: MagicWand)(val pos: Position = NoPosition, 
   lazy val typ = Bool
 }
 
+case class Attaching(fact: Exp)(val pos: Position = NoPosition, val info: Info = NoInfo, val errT: ErrorTrafo = NoTrafos) extends Exp {
+  override lazy val check: Seq[ConsistencyError] =
+    (if(!(fact isSubtype Bool)) Seq(ConsistencyError(s"Fact attached to a magic wand must be of Bool type, but found ${fact.typ}.", fact.pos)) else Seq()) ++
+    Consistency.checkPure(fact)
+
+  lazy val typ = Bool
+}
+
 // --- Old expressions
 
 sealed trait OldExp extends UnExp {

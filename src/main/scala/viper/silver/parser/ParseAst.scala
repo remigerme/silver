@@ -1456,7 +1456,7 @@ case class PFold(fold: PKw.Fold, e: PExp)(val pos: (Position, Position)) extends
 
 case class PUnfold(unfold: PKw.Unfold, e: PExp)(val pos: (Position, Position)) extends PStmt
 
-case class PPackageWand(pckg: PKw.Package, e: PExp, proofScript: Option[PSeqn])(val pos: (Position, Position)) extends PStmt
+case class PPackageWand(pckg: PKw.Package, e: PExp, attachings: Seq[PAttaching], proofScript: Option[PSeqn])(val pos: (Position, Position)) extends PStmt
 
 case class PApplyWand(apply: PKw.Apply, e: PExp)(val pos: (Position, Position)) extends PStmt
 
@@ -1508,6 +1508,13 @@ case class PAttached(attached: PKwOp.Attached, fact: PExp, to: PKwOp.To, wand: P
   override val args = Seq(fact, wand)
   override def signatures: List[PTypeSubstitution] = List(
     Map(POpApp.pArgS(0) -> Bool, POpApp.pArgS(1) -> Wand, POpApp.pResS -> Bool)
+  )
+}
+
+case class PAttaching(attaching: PKwOp.Attaching, fact: PExp)(val pos: (Position, Position)) extends PHeapOpApp {
+  override val args = Seq(fact)
+  override def signatures: List[PTypeSubstitution] = List(
+    Map(POpApp.pArgS(0) -> Bool, POpApp.pResS -> Bool)
   )
 }
 

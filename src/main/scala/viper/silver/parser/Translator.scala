@@ -209,9 +209,11 @@ case class Translator(program: PProgram) {
         Fold(exp(e).asInstanceOf[PredicateAccessPredicate])(pos, info)
       case PUnfold(_, e) =>
         Unfold(exp(e).asInstanceOf[PredicateAccessPredicate])(pos, info)
-      case PPackageWand(_, e, proofScript) =>
+      case PPackageWand(_, e, attachings, proofScript) =>
         val wand = exp(e).asInstanceOf[MagicWand]
-        Package(wand, proofScript map (stmt(_).asInstanceOf[Seqn]) getOrElse Statements.EmptyStmt)(pos, info)
+        val resProofScript = proofScript map (stmt(_).asInstanceOf[Seqn]) getOrElse Statements.EmptyStmt
+        val resAttachings = attachings map (exp(_).asInstanceOf[Attaching])
+        Package(wand, resAttachings, resProofScript)(pos, info)
       case PApplyWand(_, e) =>
         Apply(exp(e).asInstanceOf[MagicWand])(pos, info)
       case PInhale(_, e) =>
@@ -516,6 +518,8 @@ case class Translator(program: PProgram) {
         Asserting(exp(a), exp(e))(pos, info)
       case PAttached(_, fact, _, wand) =>
         Attached(exp(fact), exp(wand).asInstanceOf[MagicWand])(pos, info)
+      case PAttaching(_, fact) =>
+        Attaching(exp(fact))(pos, info)
       case pl@PLet(_, _, _, exp1, _, PLetNestedScope(body)) =>
         Let(liftLogicalDecl(pl.decl), exp(exp1.inner), exp(body))(pos, info)
       case _: PLetNestedScope =>

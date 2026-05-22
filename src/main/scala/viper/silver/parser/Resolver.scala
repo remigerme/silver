@@ -220,9 +220,10 @@ case class TypeChecker(names: NameAnalyser) {
       case PUnfold(_, e) =>
         acceptNonAbstractPredicateAccess(e, "abstract predicates cannot be unfolded")
         check(e, Predicate)
-      case PPackageWand(_, e, proofScript) =>
+      case PPackageWand(_, e, attachings, proofScript) =>
         check(e, Wand)
         checkMagicWand(e)
+        attachings foreach (a => check(a, Bool))
         proofScript foreach check
       case PApplyWand(_, e) =>
         check(e, Wand)

@@ -27,6 +27,7 @@ object Expressions {
     case app: Applying => isPure(app.body)
     case Asserting(a, e) => isPure(e)
     case Attached(fact, _) => isPure(fact)
+    case Attaching(fact) => isPure(fact) 
     case QuantifiedExp(_, e0) => isPure(e0)
     case Let(_, _, body) => isPure(body)
     case e: ExtensionExp => e.extensionIsPure
@@ -148,6 +149,8 @@ object Expressions {
       case unf@Unfolding(acc, body) => rec(body).map(Unfolding(acc, _)(unf.pos, unf.info, unf.errT))
       case app@Applying(wand, body) => rec(body).map(Applying(wand, _)(app.pos, app.info, app.errT))
       case ass@Asserting(a, body) => rec(body).map(Asserting(a, _)(ass.pos, ass.info, ass.errT))
+      case att@Attached(fact, wand) => rec(fact).map(Attached(_, wand)(att.pos, att.info, att.errT))
+      case att@Attaching(fact) => rec(fact).map(Attaching(_)(att.pos, att.info, att.errT))
       case let@Let(variable, exp, body) => rec(body).map(Let(variable, exp, _)(let.pos, let.info, let.errT))
       case qa@Forall(_, _, exp) => rec(exp).map(exp2 => qa.copy(exp = exp2)(qa.pos, qa.info, qa.errT))
       case qe@Exists(_, _, exp) => rec(exp).map(exp2 => qe.copy(exp = exp2)(qe.pos, qe.info, qe.errT))

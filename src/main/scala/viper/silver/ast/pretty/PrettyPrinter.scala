@@ -670,7 +670,10 @@ object FastPrettyPrinter extends FastPrettyPrinterBase with BracketPrettyPrinter
       case FieldAssign(lhs, rhs) => show(lhs) <+> ":=" <+> nest(defaultIndent, show(rhs))
       case Fold(e) => text("fold") <+> nest(defaultIndent, show(e))
       case Unfold(e) => text("unfold") <+> nest(defaultIndent, show(e))
-      case Package(e, proofScript) => text("package") <+> show(e) <+> showBlock(proofScript)
+      case Package(e, attachings, proofScript) =>
+        text("package") <+> show(e) <>
+          (if (attachings.isEmpty) nil else nest(defaultIndent, line <> ssep(attachings map show, line))) <+>
+          showBlock(proofScript)
       case Apply(e) => text("apply") <+> nest(defaultIndent, show(e))
       case Inhale(e) => text("inhale") <+> nest(defaultIndent, show(e))
       case Assume(e) => text("assume") <+> nest(defaultIndent, show(e))
@@ -789,6 +792,8 @@ object FastPrettyPrinter extends FastPrettyPrinterBase with BracketPrettyPrinter
         parens(text("asserting") <+> nest(defaultIndent, parens(show(ass))) <+> "in" <> nest(defaultIndent, line <> show(exp)))
       case Attached(fact, wand) =>
         parens(text("attached") <+> nest(defaultIndent, show(fact)) <+> "to" <> nest(defaultIndent, line <> show(wand)))
+      case Attaching(fact) =>
+        group(text("attaching") <+> nest(defaultIndent, show(fact)))
       case Old(exp) =>
         text("old") <> parens(show(exp))
       case LabelledOld(exp,label) =>

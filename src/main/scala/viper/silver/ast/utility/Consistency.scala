@@ -370,7 +370,7 @@ object Consistency {
     val c = Context(p)
     var s = Seq.empty[ConsistencyError]
     n.visitWithContext(c)(c => {
-      case Package(_, proofScript @ Seqn(_, locals)) =>
+      case Package(_, _, proofScript @ Seqn(_, locals)) =>
         s ++= checkMagicWandProofScript(proofScript, locals.map({
           case localVar: LocalVarDecl => localVar
         }))

@@ -137,7 +137,7 @@ case class Unfold(acc: PredicateAccessPredicate)(val pos: Position = NoPosition,
 }
 
 /** Package a magic wand. */
-case class Package(wand: MagicWand, proofScript: Seqn)(val pos: Position = NoPosition, val info: Info = NoInfo, val errT: ErrorTrafo = NoTrafos) extends Stmt {
+case class Package(wand: MagicWand, attachings: Seq[Attaching], proofScript: Seqn)(val pos: Position = NoPosition, val info: Info = NoInfo, val errT: ErrorTrafo = NoTrafos) extends Stmt {
   override lazy val check : Seq[ConsistencyError] =
     (if(!Consistency.noResult(this)) Seq(ConsistencyError("Result variables are only allowed in postconditions of functions.", pos)) else Seq()) ++
     (if(!(wand isSubtype Wand)) Seq(ConsistencyError(s"Expected wand but found ${wand.typ} ($wand)", wand.pos)) else Seq())
