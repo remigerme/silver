@@ -62,3 +62,21 @@ method propagate(x: Ref)
     assert x.b ==> x.f == 2
     assert !x.b ==> x.f == 3
 }
+
+method snapshot_eq_setup(x: Ref, y: Ref)
+    requires acc(x.f, 1/2) && x.f == 1
+    ensures acc(y.f, 1/4) && y.f == 2 --* false
+{
+    //:: ExpectedOutput(package.failed:assertion.false)
+    package acc(y.f, 1/4) && y.f == 2 --* false {
+        package x == y --* acc(x.f, 1/2)
+    }
+}
+
+method snapshot_eq_unsound(x: Ref, y: Ref)
+    requires acc(x.f, 1/2) && x.f == 1
+    requires acc(y.f, 1/4) && y.f == 2
+{
+    snapshot_eq_setup(x, y)
+    apply acc(y.f, 1/4) && y.f == 2 --* false
+}
