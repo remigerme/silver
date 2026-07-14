@@ -1,0 +1,109 @@
+field fst: Int
+field snd: Int
+predicate pair(x: Ref) { acc(x.fst) && acc(x.snd) }
+
+define W(x) acc(x.snd) --* pair(x)
+
+method first(x: Ref) returns (o: Int)
+    requires W(x)
+    requires attachedexp_valid unfolding pair(x) in x.fst to W(x)
+    ensures  W(x)
+    ensures  attachedexp_valid unfolding pair(x) in x.fst to W(x)
+    ensures  o == old(attachedexp unfolding pair(x) in x.fst to W(x))
+
+function opaque(x: Ref): Int requires acc(x.fst) { 5 }
+function ret2(): Int { 2 }
+function add_one(i: Int): Int { i + 1 }
+
+method demo(x: Ref) {
+    inhale acc(x.fst)
+    x.fst := 2
+
+    package W(x) { fold pair(x) }
+
+    assert (attachedexp unfolding pair(x) in x.fst to W(x)) == 2
+    assert (attachedexp unfolding pair(x) in add_one(x.fst) to W(x)) == 3
+}
+
+method demo_assign(x: Ref) {
+    inhale acc(x.fst)
+    x.fst := ret2()
+
+    package W(x) { fold pair(x) }
+
+    assert (attachedexp unfolding pair(x) in x.fst to W(x)) == 2
+    assert (attachedexp unfolding pair(x) in add_one(x.fst) to W(x)) == 3
+}
+
+method demo_fn(x: Ref) {
+    inhale acc(x.fst)
+    x.fst := 2
+
+    package W(x) { fold pair(x) }
+
+    var o: Int := first(x)
+
+    assert o == 2
+}
+
+method demo_opaque(x: Ref) {
+    inhale acc(x.fst)
+    
+    assert opaque(x) == 5
+
+    package W(x) { fold pair(x) }
+
+    assert (attachedexp unfolding pair(x) in opaque(x) to W(x)) == 5
+}
+
+field val: Int
+field next: Ref
+predicate list(x: Ref) { x != null ==> acc(x.val) && acc(x.next) && list(x.next) }
+function len(x: Ref): Int requires list(x) { x == null ? 0 : 1 + unfolding list(x) in len(x.next) }
+
+method len_pre(cur: Ref, x: Ref) returns (o: Int) 
+    requires list(cur) --* list(x)
+    requires attachedexp_valid len(x) - old[lhs](len(cur)) to list(cur) --* list(x)
+    ensures  list(cur) --* list(x)
+    ensures  attachedexp_valid len(x) - old[lhs](len(cur)) to list(cur) --* list(x)
+    ensures  o == old(attachedexp len(x) - old[lhs](len(cur)) to list(cur) --* list(x))
+
+method m3(x: Ref) 
+    requires list(x)
+{
+    var i: Int := 0
+    var cur: Ref := x
+
+    define W list(cur) --* list(x)
+
+    package W
+
+    while (cur != null)
+        invariant list(cur)
+        invariant W
+        invariant attachedexp_valid len(x) - old[lhs](len(cur)) to W
+        invariant (attachedexp len(x) - old[lhs](len(cur)) to W) == i
+    {
+
+        var prev_j: Int := attachedexp len(x) - old[lhs](len(cur)) to W
+        var prev_j_: Int := attachedexp len(x) - old[lhs](len(cur)) to W
+        assert prev_j == prev_j_
+
+        unfold list(cur)
+        var prev_cur: Ref := cur
+        cur := cur.next
+        i := i + 1
+
+        fold list(prev_cur)
+        assert len(prev_cur) - (unfolding list(prev_cur) in len(cur)) == 1
+        unfold list(prev_cur)
+
+        package W {
+            fold list(prev_cur)
+            apply list(prev_cur) --* list(x)
+        }
+
+        var j: Int := attachedexp len(x) - old[lhs](len(cur)) to W
+        assert j == prev_j + 1
+    }
+}

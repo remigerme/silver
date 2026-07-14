@@ -1,0 +1,136 @@
+field val: Int
+field next: Ref
+
+predicate list(x: Ref) { x != null ==> acc(x.val) && acc(x.next) && list(x.next) }
+function len(x: Ref): Int requires list(x) {
+    x == null ? 0 : 1 + unfolding list(x) in len(x.next)
+}
+function elems(x: Ref): Seq[Int] requires list(x) {
+    x == null ? Seq[Int]() : unfolding list(x) in Seq(x.val) ++ elems(x.next)
+}
+
+method delete_last(x: Ref) returns (y: Ref)
+    requires list(x) && len(x) > 0
+    ensures list(y)
+    ensures len(y) == old(len(x)) - 1
+    ensures elems(y) == old(elems(x))[0..|old(elems(x))| - 1]
+{
+    unfold list(x)
+    if (x.next == null) {
+        y := null
+        fold list(y)
+    } else {
+        fold list(x)
+        y := x
+        
+        define A(c, l, e) list(c) && len(c) == l - 1 && elems(c) == e[0..|e| - 1]  
+        define B list(y) && len(y) == old(len(x)) - 1 && elems(y) == old(elems(x))[0..|old(elems(x))| - 1]
+        
+        var cur: Ref := y
+        var len_cur: Int := len(cur)
+        var elm_cur: Seq[Int] := elems(cur)
+        package A(cur, len_cur, elm_cur) --* B
+        
+        while (unfolding list(cur) in unfolding list(cur.next) in cur.next.next != null)
+            invariant list(cur) && cur != null
+            invariant unfolding list(cur) in cur.next != null
+            invariant len_cur == len(cur)
+            invariant elm_cur == elems(cur)
+            invariant A(cur, len_cur, elm_cur) --* B
+        {
+            var old_cur: Ref := cur
+            var old_len_cur: Int := len_cur
+            var old_elm_cur: Seq[Int] := elm_cur
+            
+            unfold list(cur)
+            cur := cur.next
+            len_cur := len(cur)
+            elm_cur := elems(cur)
+            
+            package A(cur, len_cur, elm_cur) --* B {
+                fold list(old_cur)
+                apply A(old_cur, old_len_cur, old_elm_cur) --* B
+            }
+        }
+        
+        // Helping for the length
+        assert unfolding list(cur) in unfolding list(cur.next) in len(cur.next.next) == 0
+        
+        // Helping for the elements
+        assert unfolding list(cur) in unfolding list(cur.next) in |elems(cur.next.next)| == 0
+        
+        unfold list(cur)
+        cur.next := null
+        fold list(cur.next)
+        fold list(cur)
+        
+        apply A(cur, len_cur, elm_cur) --* B
+    }
+}
+
+
+method delete_last_attached(x: Ref) returns (y: Ref)
+    requires list(x) && len(x) > 0
+    ensures  list(y)
+    ensures  len(y) == old(len(x)) - 1
+    ensures  elems(y) == old(elems(x))[0..|old(elems(x))| - 1]
+{
+    unfold list(x)
+    if (x.next == null) {
+        y := null
+        fold list(y)
+    } else {
+        fold list(x)
+        y := x
+        
+        define W(c) list(c) --* list(y)
+        define F(c, l) old[lhs](len(c)) == l - 1 ==> len(y) == old(len(x)) - 1
+        define G(c, e) old[lhs](elems(c)) == e[0..|e| - 1] ==> elems(y) == old(elems(x))[0..|old(elems(x))| - 1]
+
+        var cur: Ref := y
+        var len_cur: Int := len(cur)
+        var elm_cur: Seq[Int] := elems(cur)
+        // Turns out we don't need to attach F and G explicitely as they are trivial at this point.
+        package W(cur)
+
+        while (unfolding list(cur) in unfolding list(cur.next) in cur.next.next != null)
+            invariant list(cur) && cur != null && unfolding list(cur) in cur.next != null
+            invariant len_cur == len(cur)
+            invariant elm_cur == elems(cur)
+            invariant W(cur)
+            invariant attached F(cur, len_cur) to W(cur)
+            invariant attached G(cur, elm_cur) to W(cur)
+        {
+            var prev_cur: Ref := cur
+            var prev_len_cur: Int := len_cur
+            var prev_elm_cur: Seq[Int] := elm_cur
+            
+            unfold list(cur)
+            cur := cur.next
+            len_cur := len(cur)
+            elm_cur := elems(cur)
+            
+            package W(cur)
+                // explicit attachings are not needed either
+                // attaching F(cur, len_cur)
+                // attaching G(cur, elm_cur)
+            {
+                fold list(prev_cur)
+                apply W(prev_cur)
+            }
+        }
+        
+        // Helping for the length
+        assert unfolding list(cur) in unfolding list(cur.next) in len(cur.next.next) == 0
+
+        // Helping for the elements
+        assert unfolding list(cur) in unfolding list(cur.next) in |elems(cur.next.next)| == 0
+        
+        unfold list(cur)
+        cur.next := null
+        fold list(cur.next)
+        fold list(cur)
+
+        apply W(cur)
+    }
+}

@@ -1,0 +1,76 @@
+field f: Int
+
+method attached_missing_wand() {
+    //:: ExpectedOutput(inhale.failed:wand.not.found)
+    assume attached true to true --* true
+}
+
+method attachedexp_missing_wand() {
+    //:: ExpectedOutput(inhale.failed:wand.not.found)
+    assume attachedexp true to true --* true
+}
+
+method attachedexp_valid_missing_wand() {
+    //:: ExpectedOutput(inhale.failed:wand.not.found)
+    assume attachedexp_valid true to true --* true
+}
+
+method attaching_acc_not_provided_by_wand(x: Ref)
+    requires acc(x.f)
+{
+    //:: ExpectedOutput(attaching.failed:insufficient.permission)
+    package true --* true attaching old[lhs](x.f) == 1 ==> x.f == 1
+}
+
+method attached_acc_not_provided_by_wand(x: Ref)
+    requires acc(x.f)
+{
+    package true --* true
+    //:: ExpectedOutput(inhale.failed:insufficient.permission)
+    assume attached old[lhs](x.f) == 1 ==> x.f == 1 to true --* true
+}
+
+method attaching_acc_not_provided_by_wand_2(x: Ref)
+    requires acc(x.f)
+{
+    //:: ExpectedOutput(package.failed:insufficient.permission)
+    package acc(x.f) --* true attaching old[lhs](x.f) == 1 ==> x.f == 1
+}
+
+method attached_acc_not_provided_by_wand_2(x: Ref)
+    requires acc(x.f)
+{
+    package acc(x.f) --* true
+    //:: ExpectedOutput(inhale.failed:insufficient.permission)
+    assume attached old[lhs](x.f) == 1 ==> x.f == 1 to acc(x.f) --* true
+}
+
+field fst: Int
+field snd: Int
+predicate pair(x: Ref) { acc(x.fst) && acc(x.snd) }
+
+define W(x) acc(x.snd) --* pair(x)
+
+method attachedexp_depends_on_lhs(x: Ref) {
+    inhale acc(x.fst)
+    x.fst := 2
+
+    package W(x) { fold pair(x) }
+
+    //:: ExpectedOutput(assert.failed:attached.exp.depends.on.lhs)
+    assert (attachedexp unfolding pair(x) in x.snd to W(x)) == 2
+}
+
+method first_wrong(x: Ref) returns (o: Int)
+    requires W(x)
+{
+    //:: ExpectedOutput(assignment.failed:attached.exp.depends.on.lhs)
+    o := attachedexp unfolding pair(x) in x.fst to W(x)
+}
+
+method first(x: Ref) returns (o: Int)
+    requires W(x)
+    requires attachedexp_valid unfolding pair(x) in x.fst to W(x)
+{
+    o := attachedexp unfolding pair(x) in x.fst to W(x)
+}

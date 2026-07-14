@@ -1,0 +1,47 @@
+field f: Int
+
+method test_trivial01(x: Ref) {
+    package acc(x.f) --* acc(x.f)
+    assert attached old[lhs](x.f) == 1 ==> x.f == 1 to acc(x.f) --* acc(x.f)
+}
+
+// The following fails because we don't have any definition for the wand.
+method test_trivial_failing(x: Ref)
+    requires acc(x.f) --* acc(x.f)
+{
+    //:: ExpectedOutput(assert.failed:assertion.false)
+    assert attached old[lhs](x.f) == 1 ==> x.f == 1 to acc(x.f) --* acc(x.f)
+}
+
+method test_trivial02(x: Ref)
+    requires acc(x.f)
+{
+    x.f := 8
+    package true --* acc(x.f)
+    assert attached x.f == 8 to true --* acc(x.f)
+}
+
+method test_trivial03(x: Ref)
+    requires acc(x.f)
+{
+    x.f := 8
+    package true --* acc(x.f)
+    assert attached x.f >= 6 to true --* acc(x.f)
+}
+
+
+method test_weaken01(x: Ref)
+    requires acc(x.f)
+{
+    x.f := 9
+    package true --* acc(x.f) attaching x.f >= 8
+    assert attached x.f >= 7 to true --* acc(x.f)
+}
+
+method test_weaken02(x: Ref)
+    requires acc(x.f)
+{
+    x.f := 9
+    package true --* acc(x.f)
+    assert attached x.f >= 7 to true --* acc(x.f)
+}

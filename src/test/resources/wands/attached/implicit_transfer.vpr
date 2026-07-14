@@ -1,0 +1,31 @@
+field f: Int
+
+method test01(x: Ref)
+    requires acc(x.f) --* acc(x.f)
+    requires attached x.f >= 2 to acc(x.f) --* acc(x.f)
+{
+    package acc(x.f) && true --* acc(x.f) attaching x.f >= 1 {
+        //:: ExpectedOutput(assert.failed:wand.not.found)
+        assert attached x.f >= 2 to acc(x.f) --* acc(x.f)
+        /* The previous line fails with a missing wand error. At that stage, the wand is in the 4th reserved 
+         * heap (aka external), and Consumer.scala would create a new state s1 with s1.reserveHeaps = Nil and
+         * s1.h = getEvalHeap(s) (only the first three reserved heaps).
+         * When consuming an attached fact, we _could_ allow more visibility on the external heaps, hence a new
+         * getAttachedEvalHeap function granting access to all heaps proposed in commit 
+         * 6ad278357b154a886398968a62e15e5b56b4fa82 but reverted since then as the issue already existed
+         * when unfolding predicates from the outer heaps. 
+         */
+        apply acc(x.f) --* acc(x.f)
+    }
+}
+
+// Exhibits a similar issue in Evaluator.scala when getEvalHeap was used unconditionally.
+method test02(x: Ref)
+    requires acc(x.f) --* acc(x.f)
+{
+    package acc(x.f) && true --* acc(x.f) attaching x.f >= 1 {
+        //:: ExpectedOutput(inhale.failed:wand.not.found)
+        assume attached x.f >= 2 to acc(x.f) --* acc(x.f)
+        apply acc(x.f) --* acc(x.f)
+    }
+}
