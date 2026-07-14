@@ -385,7 +385,7 @@ object Consistency {
 
         c.copy(insideWandStatus = InsideWandStatus.Yes)
 
-      case _: Attached =>
+      case _: Attached | _ : AttachedExp | _: AttachedExpValid =>
         c.copy(insideAttachedFactStatus = true)
 
       case po@LabelledOld(_, LabelledOld.LhsOldLabel) if !c.insideWandStatus.isInside && !c.insideAttachedFactStatus =>

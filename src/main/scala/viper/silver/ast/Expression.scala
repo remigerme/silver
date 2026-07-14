@@ -526,6 +526,22 @@ case class Attaching(fact: Exp)(val pos: Position = NoPosition, val info: Info =
   lazy val typ = Bool
 }
 
+case class AttachedExp(exp: Exp, wand: MagicWand)(val pos: Position = NoPosition, val info: Info = NoInfo, val errT: ErrorTrafo = NoTrafos) extends Exp {
+  override lazy val check: Seq[ConsistencyError] = 
+    (if(!(wand isSubtype Wand)) Seq(ConsistencyError(s"Expected wand but found ${wand.typ} ($wand)", wand.pos)) else Seq()) ++
+    Consistency.checkPure(exp)
+
+  lazy val typ = exp.typ
+}
+
+case class AttachedExpValid(exp: Exp, wand: MagicWand)(val pos: Position = NoPosition, val info: Info = NoInfo, val errT: ErrorTrafo = NoTrafos) extends Exp {
+  override lazy val check: Seq[ConsistencyError] = 
+    (if(!(wand isSubtype Wand)) Seq(ConsistencyError(s"Expected wand but found ${wand.typ} ($wand)", wand.pos)) else Seq()) ++
+    Consistency.checkPure(exp)
+
+  lazy val typ = Bool
+}
+
 // --- Old expressions
 
 sealed trait OldExp extends UnExp {

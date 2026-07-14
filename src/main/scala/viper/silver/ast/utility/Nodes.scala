@@ -86,6 +86,8 @@ object Nodes {
           case Asserting(ass, body) => Seq(ass, body)
           case Attached(fact, wand) => Seq(fact, wand)
           case Attaching(fact) => Seq(fact)
+          case AttachedExp(exp, wand) => Seq(exp, wand)
+          case AttachedExpValid(exp, wand) => Seq(exp, wand)
           case Old(exp) => Seq(exp)
           case CondExp(cond, thn, els) => Seq(cond, thn, els)
           case Let(v, exp, body) => Seq(v, exp, body)

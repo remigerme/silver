@@ -794,6 +794,10 @@ object FastPrettyPrinter extends FastPrettyPrinterBase with BracketPrettyPrinter
         parens(text("attached") <+> nest(defaultIndent, show(fact)) <+> "to" <> nest(defaultIndent, line <> show(wand)))
       case Attaching(fact) =>
         group(text("attaching") <+> nest(defaultIndent, show(fact)))
+      case AttachedExp(exp, wand) =>
+        parens(text("attachedexp") <+> nest(defaultIndent, show(exp)) <+> "to" <> nest(defaultIndent, line <> show(wand)))
+      case AttachedExpValid(exp, wand) =>
+        parens(text("attachedexp_valid") <+> nest(defaultIndent, show(exp)) <+> "to" <> nest(defaultIndent, line <> show(wand)))
       case Old(exp) =>
         text("old") <> parens(show(exp))
       case LabelledOld(exp,label) =>

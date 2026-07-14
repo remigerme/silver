@@ -694,6 +694,13 @@ object reasons {
     def withNode(offendingNode: errors.ErrorNode = this.offendingNode) = MagicWandChunkNotFound(offendingNode.asInstanceOf[MagicWand])
   }
 
+  case class AttachedExpDependsOnLhs(offendingNode: AttachedExp) extends AbstractErrorReason {
+    val id = "attached.exp.depends.on.lhs"
+    def readableMessage = s"Expression ${offendingNode.exp} attached to the wand ${offendingNode.wand} might depend on the left-hand side of the wand."
+
+    def withNode(offendingNode: errors.ErrorNode = this.offendingNode) = AttachedExpDependsOnLhs(offendingNode.asInstanceOf[AttachedExp])
+  }
+
   case class QPAssertionNotInjective(offendingNode: ResourceAccess) extends AbstractErrorReason {
     val id = "qp.not.injective"
     def readableMessage = s"Quantified resource $offendingNode might not be injective."

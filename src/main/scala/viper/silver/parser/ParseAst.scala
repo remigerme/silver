@@ -1518,6 +1518,20 @@ case class PAttaching(attaching: PKwOp.Attaching, fact: PExp)(val pos: (Position
   )
 }
 
+case class PAttachedExp(attachedexp: PKwOp.AttachedExp, exp: PExp, to: PKwOp.To, wand: PExp)(val pos: (Position, Position)) extends PHeapOpApp {
+  override val args = Seq(exp, wand)
+  override def signatures: List[PTypeSubstitution] = List(
+    Map(POpApp.pArgS(1) -> Wand, POpApp.pResS -> POpApp.pArg(0))
+  )
+}
+
+case class PAttachedExpValid(attachedexp_valid: PKwOp.AttachedExpValid, exp: PExp, to: PKwOp.To, wand: PExp)(val pos: (Position, Position)) extends PHeapOpApp {
+  override val args = Seq(exp, wand)
+  override def signatures: List[PTypeSubstitution] = List(
+    Map(POpApp.pArgS(1) -> Wand, POpApp.pResS -> Bool)
+  )
+}
+
 sealed trait PScope extends PNode {
   val scopeId = PScope.uniqueId()
 }

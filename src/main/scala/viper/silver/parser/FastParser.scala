@@ -199,7 +199,7 @@ object FastParserCompanion {
     // modifiers
     PKw.Unique,
     // facts attached to wands
-    PKwOp.Attached, PKwOp.To, PKwOp.Attaching
+    PKwOp.Attached, PKwOp.To, PKwOp.Attaching, PKwOp.AttachedExp, PKwOp.AttachedExpValid
   )
 }
 
@@ -406,7 +406,7 @@ class FastParser {
   def atomReservedKw[$: P]: P[PExp] = {
     reservedKwMany(
       StringIn("true", "false", "null", "old", "result", "acc", "none", "wildcard", "write", "epsilon", "perm", "let", "forall", "exists", "forperm",
-        "unfolding", "applying", "asserting", "Set", "Seq", "Multiset", "Map", "range", "domain", "new", "attached"),
+        "unfolding", "applying", "asserting", "Set", "Seq", "Multiset", "Map", "range", "domain", "new", "attached", "attachedexp", "attachedexp_valid"),
       str => pos => str match {
         case "true" => Pass.map(_ => PBoolLit(PReserved(PKw.True)(pos))(_))
         case "false" => Pass.map(_ => PBoolLit(PReserved(PKw.False)(pos))(_))
@@ -434,6 +434,8 @@ class FastParser {
         case "domain" => mapDomain.map(_(PReserved(PKwOp.Domain)(pos)))
         case "new" => newExp.map(_(PReserved(PKw.New)(pos)))
         case "attached" => attached.map(_(PReserved(PKwOp.Attached)(pos)))
+        case "attachedexp" => attachedexp.map(_(PReserved(PKwOp.AttachedExp)(pos)))
+        case "attachedexp_valid" => attachedexp_valid.map(_(PReserved(PKwOp.AttachedExpValid)(pos)))
       }
     ).pos
   }
@@ -765,6 +767,16 @@ class FastParser {
   }
 
   def attaching[$: P]: P[PAttaching] = P((P(PKwOp.Attaching) ~ exp) map (PAttaching.apply _).tupled).pos
+
+  def attachedexp[$: P]: P[PKwOp.AttachedExp => Pos => PAttachedExp] = P((exp ~ PKwOp.To ~ magicWandExp())).map {
+    case (exp, to, wand) =>
+      PAttachedExp(_, exp, to, wand)
+  }
+
+  def attachedexp_valid[$: P]: P[PKwOp.AttachedExpValid => Pos => PAttachedExpValid] = P((exp ~ PKwOp.To ~ magicWandExp())).map {
+    case (exp, to, wand) =>
+      PAttachedExpValid(_, exp, to, wand)
+  }
 
   def funcApp[$: P]: P[PCall] = P(idnref[$, PCallable] ~~ " ".repX(1).map { _ => pos: Pos => pos }.pos.? ~~ argList(exp)).map {
     case (func, space, args) =>
