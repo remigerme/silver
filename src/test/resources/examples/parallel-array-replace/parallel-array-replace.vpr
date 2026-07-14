@@ -6,10 +6,11 @@ define pre2(a, l, r) forall i: Int :: l <= i && i < r ==> acc(loc(a, i).val)
 define post1(a, l, r) pre2(a, l, r) && true
 define post2(a, l, r) forall i: Int :: l <= i && i < r ==>
                           (old(loc(a, i).val == from)
-                            ? loc(a, i).val == to
+                            ? loc(a, i).val == to_
                             : loc(a, i).val == old(loc(a, i).val))
 
-method Replace(a: Array, left: Int, right: Int, from: Int, to: Int)
+// `to` is now a reserved keyword (for attached facts/expressions to wands)
+method Replace(a: Array, left: Int, right: Int, from: Int, to_: Int)
   requires pre1(a, left, right)
   requires pre2(a, left, right)
   ensures  post1(a, left, right)
@@ -17,7 +18,7 @@ method Replace(a: Array, left: Int, right: Int, from: Int, to: Int)
 {
   if (right - left <= 1) {
     if(loc(a, left).val == from) {
-      loc(a, left).val := to
+      loc(a, left).val := to_
     }
   } else {
     var mid: Int := left + (right - left) \ 2

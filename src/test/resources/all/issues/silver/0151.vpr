@@ -15,9 +15,10 @@ define acquire(x) {
   inhale acc(x.held)
 }
 
-method transfer(this: Ref, to: Ref, amount: Int) {
-  inhale below(this) && level(this) < level(to)
+// `to` is now a reserved keyword (for attached facts/expressions to wands)
+method transfer(this: Ref, to_: Ref, amount: Int) {
+  inhale below(this) && level(this) < level(to_)
 
   acquire(this)
-  acquire(to)
+  acquire(to_)
 }
