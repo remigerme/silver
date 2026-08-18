@@ -27,9 +27,13 @@ method unsoundness_applying_using_different_branches(x: Ref) {
 
     x.b := false
     assert applying (W) in true
+    // Side-effect: through permission constraints, we now know that x.g was packed inside the footprint of the wand.
+    assert perm(x.g) == none
 
     x.b := true
     assert applying (W) in true
+    // Same for x.f
+    assert perm(x.f) == none
 
     //:: ExpectedOutput(assert.failed:assertion.false)
     assert false
