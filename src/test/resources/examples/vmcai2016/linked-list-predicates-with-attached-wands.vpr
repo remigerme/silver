@@ -29,6 +29,13 @@ function sorted(this: Ref, end: Ref): Bool
       unfolding lseg(this.next, end) in this.data <= this.next.data && sorted(this.next, end)
 }
 
+function head_ge(this: Ref, end: Ref, bound: Int): Bool
+    requires lseg(this, end)
+{
+    this == end ? true : (unfolding lseg(this, end) in bound <= this.data)
+}
+
+
 function contentNodes(this: Ref, end: Ref): Seq[Int]
   requires acc(lseg(this, end))
   ensures  this == end ==> result == Seq[Int]()
@@ -119,12 +126,13 @@ method insert(this: Ref, elem: Int) returns (index: Int)
   } else {
     var hd: Ref := this.head
     var ptr: Ref := hd
+    var prev_val: Int := hd.data
     fold acc(lseg(this.head, ptr))
     index := index + 1
 
     define A acc(lseg(ptr, null))
     define B acc(lseg(hd, null))
-    define S old[lhs](sorted(ptr, null)) ==> sorted(hd, null)
+    define S old[lhs](sorted(ptr, null) && (prev_val <= unfolding lseg(ptr, null) in ptr.data)) ==> sorted(hd, null)
     define C old[lhs](contentNodes(ptr, null)[0] == old(content(this))[index-1]) ==> contentNodes(hd, null) == old(content(this))[0..index-1] ++ old[lhs](contentNodes(ptr, null))
 
     package A --* B
@@ -135,9 +143,9 @@ method insert(this: Ref, elem: Int) returns (index: Int)
       invariant ptr.next == null ==> index == |old(content(this))|
       invariant ptr.data == old(content(this))[index-1]
       invariant ptr.next != null ==> sorted(ptr.next, null)
+      invariant prev_val <= ptr.data
       invariant ptr.next != null ==> contentNodes(ptr.next, null) == old(content(this))[index..]
       invariant ptr.data < elem
-      invariant ptr.next != null ==> ptr.data <= unfolding acc(lseg(ptr.next, null)) in ptr.next.data
       invariant A --* B
       invariant attached S to A --* B
       invariant attached C to A --* B
@@ -149,10 +157,9 @@ method insert(this: Ref, elem: Int) returns (index: Int)
       unfold acc(lseg(ptr.next, null))
       index := index + 1
       ptr := ptr.next
+      prev_val := prev.data
 
       package (A) --* B {
-          assert acc(prev.data)
-          assume prev.data <= unfolding lseg(ptr, null) in ptr.data // TODO: annoying junction properly
           fold acc(lseg(prev, null))
           apply acc(lseg(prev, null)) --* acc(lseg(hd, null))
       }
