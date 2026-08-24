@@ -1,0 +1,107 @@
+field val: Int
+field next: Ref
+
+predicate list(xs: Ref) {
+    xs != null ==> acc(xs.val) && acc(xs.next) && list(xs.next)
+}
+
+function sorted(xs: Ref): Bool
+    requires list(xs)
+{
+    xs == null ? true : unfolding list(xs) in xs.next == null ? true : unfolding list(xs.next) in xs.val <= xs.next.val && sorted(xs.next)
+}
+
+method stalin_sort(xs: Ref)
+    requires list(xs)
+    ensures  list(xs) && sorted(xs)
+{
+    if (xs == null) {}
+    else {
+        var cur: Ref := xs
+        var prev_val: Int := unfolding list(cur) in cur.val
+
+        define A(x, prev_val) list(x) && sorted(x) && (x != null ==> prev_val <= unfolding list(x) in x.val)
+        define B              list(xs) && sorted(xs)
+
+        package A(cur, prev_val) --* B
+        while (unfolding list(cur) in cur.next != null)
+            invariant cur != null && list(cur)
+            invariant prev_val <= unfolding list(cur) in cur.val
+            invariant A(cur, prev_val) --* B
+        {
+            var prev_cur: Ref := cur
+
+            unfold list(cur)
+            unfold list(cur.next)
+
+            var old_prev_val: Int := prev_val
+            prev_val := prev_cur.val
+
+
+            if (cur.val <= cur.next.val) {
+                cur := cur.next
+                fold list(cur)
+                package A(cur, prev_val) --* B {
+                    fold list(prev_cur)
+                    apply A(prev_cur, old_prev_val) --* B
+                }
+            } else {
+                cur.next := cur.next.next
+                fold list(cur)
+                package A(cur, prev_val) --* B {
+                    apply A(prev_cur, old_prev_val) --* B
+                }
+            }
+        }
+
+        apply A(cur, prev_val) --* B
+    }
+}
+
+method stalin_sort_attached(xs: Ref)
+    requires list(xs)
+    ensures  list(xs) && sorted(xs)
+{
+    if (xs == null) {}
+    else {
+        var cur: Ref := xs
+        var prev_val: Int := unfolding list(cur) in cur.val
+
+        define W(x)           list(x) --* list(xs)
+        define F(x, prev_val) old[lhs](sorted(x) && (x != null ==> prev_val <= unfolding list(x) in x.val)) ==> sorted(xs) 
+
+        package W(cur)
+        while (unfolding list(cur) in cur.next != null)
+            invariant cur != null && list(cur)
+            invariant prev_val <= unfolding list(cur) in cur.val
+            invariant W(cur)
+            invariant attached F(cur, prev_val) to W(cur)
+        {
+            var prev_cur: Ref := cur
+
+            unfold list(cur)
+            unfold list(cur.next)
+
+            var old_prev_val: Int := prev_val
+            prev_val := prev_cur.val
+
+
+            if (cur.val <= cur.next.val) {
+                cur := cur.next
+                fold list(cur)
+                package W(cur) {
+                    fold list(prev_cur)
+                    apply W(prev_cur)
+                }
+            } else {
+                cur.next := cur.next.next
+                fold list(cur)
+                package W(cur) {
+                    apply W(prev_cur)
+                }
+            }
+        }
+
+        apply W(cur)
+    }
+}
